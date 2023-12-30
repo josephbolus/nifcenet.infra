@@ -1,0 +1,88 @@
+---
+- name: Add the Docker repository
+  dnf:
+    name: 'dnf-command(config-manager)'
+    state: present
+
+- name: Add Docker CE repository
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+
+- name: Update DNF package cache
+  dnf:
+    update_cache: yes
+
+- debug:
+    msg:
+      - "Installing Docker Version: docker-ce-3:{{ docker_version }}"
+
+- name: Install Docker and related packages
+  dnf:
+    name:
+      - "docker-ce-3:{{ docker_version }}"
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-ce-rootless-extras
+      - docker-compose-plugin
+      - container-selinux
+      - mc
+    state: present
+
+- name: Ensures /etc/docker/ dir exists
+  file: 
+    path: "/etc/docker" 
+    state: directory
+    
+# RHEL9 MYSQL Bug https://github.com/docker-library/mysql/issues/579
+- name: Configure Docker daemon options
+  template:
+    src: docker-daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: docker
+    mode: '0644'
+
+- name: Install Docker Compose
+  ansible.builtin.get_url:
+    url: "https://github.com/docker/compose/releases/download/{{ compose_version }}/docker-compose-linux-x86_64"
+    dest: /usr/local/bin/docker-compose
+    mode: '0755'
+
+- name: Start and enable Docker service
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+
+- name: Verify Docker service is running
+  systemd:
+    name: docker
+    state: started
+
+- name: Pull test image
+  docker_image:
+    name: hello-world
+    source: pull
+    state: present
+    no_log: true
+
+- name: Verify Docker Installation
+  shell:
+    cmd: docker run --rm hello-world
+  register: docker_output
+  no_log: true
+
+- debug: 
+    var:  docker_output.stdout
+
+- name: Check Docker Compose version
+  command: docker-compose --version
+  register: compose_version
+  changed_when: false
+
+- debug:
+    var: compose_version.stdout_lines
+

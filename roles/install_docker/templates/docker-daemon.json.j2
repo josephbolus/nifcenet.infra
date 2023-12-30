@@ -1,0 +1,17 @@
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m",
+    "max-file": "5",
+    "labels": "swarm_prod",
+    "env": "prod,nifcenet"
+  },
+  "default-ulimits": {
+    "nofile": {
+      "Hard": 64000,
+      "Name": "nofile",
+      "Soft": 64000
+    }
+  },
+  "storage-driver": "overlay2"
+}

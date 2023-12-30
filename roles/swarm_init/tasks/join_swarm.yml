@@ -1,0 +1,25 @@
+---
+- name: Retrieve swarm tokens
+  shell: docker swarm join-token -q {{ item }}
+  register: swarm_tokens
+  with_items:
+    - manager
+    - worker
+  when: "'swarm_manager_operational' in group_names"
+  run_once: true
+
+- name: Join manager nodes to the cluster
+  shell: >
+    docker swarm join --advertise-addr={{ swarm_iface | default('eth0') }}:2377
+    --token={{ hostvars[groups['swarm_manager_operational'][0]]['swarm_tokens']['results'][0]['stdout'] }}
+    {{ groups['swarm_manager_ips'][0] }}:2377
+  when:
+    - "'swarm_manager_bootstrap' in group_names"
+    - "'swarm_manager_operational' not in group_names"
+
+- name: Join worker nodes to the cluster
+  shell: >
+    docker swarm join --advertise-addr={{ swarm_iface | default('eth0') }}:2377
+    --token={{ hostvars[groups['swarm_manager_operational'][0]]['swarm_tokens']['results'][1]['stdout'] }}
+    {{ groups['swarm_manager_ips'][0] }}:2377
+  when: "'swarm_worker_bootstrap' in group_names"

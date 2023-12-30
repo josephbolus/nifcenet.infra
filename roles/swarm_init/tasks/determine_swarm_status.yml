@@ -1,0 +1,50 @@
+---
+- name: Determine swarm status for managers
+  shell: docker info --format "{{ '{{.Swarm.LocalNodeState}}' }}"
+  register: swarm_status_manager
+  when: "'manager' in group_names"
+
+- name: Create swarm_manager_operational group for managers
+  add_host:
+    hostname: "{{ item }}"
+    groups: swarm_manager_operational
+  with_items: "{{ ansible_play_hosts | default(play_hosts) }}"
+  when:
+    - "'manager' in group_names"
+    - "'active' in hostvars[item].swarm_status_manager.stdout_lines"
+  run_once: true
+
+- name: Create swarm_manager_bootstrap group for managers
+  add_host:
+    hostname: "{{ item }}"
+    groups: swarm_manager_bootstrap
+  with_items: "{{ ansible_play_hosts | default(play_hosts) }}"
+  when:
+    - "'manager' in group_names"
+    - "'active' not in hostvars[item].swarm_status_manager.stdout_lines"
+  run_once: true
+
+- name: Determine swarm status for workers
+  shell: docker info --format "{{ '{{.Swarm.LocalNodeState}}' }}"
+  register: swarm_status_worker
+  when: "'worker' in group_names"
+
+- name: Create swarm_worker_operational group for workers
+  add_host:
+    hostname: "{{ item }}"
+    groups: swarm_worker_operational
+  with_items: "{{ ansible_play_hosts | default(play_hosts) }}"
+  when:
+    - "'worker' in group_names"
+    - "'active' in hostvars[item].swarm_status_worker.stdout_lines"
+  run_once: true
+
+- name: Create swarm_worker_bootstrap group for workers
+  add_host:
+    hostname: "{{ item }}"
+    groups: swarm_worker_bootstrap
+  with_items: "{{ ansible_play_hosts | default(play_hosts) }}"
+  when:
+    - "'worker' in group_names"
+    - "'active' not in hostvars[item].swarm_status_worker.stdout_lines"
+  run_once: true

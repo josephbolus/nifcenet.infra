@@ -1,0 +1,4 @@
+---
+anonuid: 2000
+anongid: 2000
+nfs_network: "10.10.100.100/24"

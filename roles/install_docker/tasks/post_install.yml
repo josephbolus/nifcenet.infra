@@ -1,0 +1,30 @@
+- name: Add users to docker group
+  user:
+    name: "{{ item }}"
+    group: docker
+    append: yes
+  loop: "{{ docker_users }}"
+
+- name: Refresh user's group membership without logout/login (optional)
+  command: newgrp docker
+  when: ansible_user_id != 'root'
+
+- name: Verify that users can run 'docker run hello-world' without sudo
+  block:
+    - name: Test docker command as {{ item }}
+      command: docker run --rm hello-world
+      become: true
+      become_user: "{{ item }}"
+      register: docker_test_result
+      ignore_errors: true
+
+    - name: Display test result for {{ item }}
+      debug:
+        msg: "User {{ item }} can run Docker commands without sudo."
+      when: docker_test_result.rc == 0
+
+    - name: Warn if user {{ item }} cannot run Docker commands without sudo
+      debug:
+        msg: "WARNING: User {{ item }} cannot run Docker commands without sudo. Return code: {{ docker_test_result.rc }}"
+      when: docker_test_result.rc != 0
+  loop: "{{ docker_users }}"

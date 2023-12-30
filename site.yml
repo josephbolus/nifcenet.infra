@@ -1,0 +1,10 @@
+---
+- name: Some title
+  hosts: localhost
+  roles: [] 
+  tasks: []
+#- name: Setup webserver
+#  hosts: all
+#  roles:
+#    - role1
+#    - role2

@@ -1,0 +1,30 @@
+{
+    "log-driver": "json-file",
+    "log-opts": {
+       "max-size": "100m",
+       "max-file": "5",
+       "labels": "swarm_prod",
+       "env": "prod,nifcenet"
+    },
+    "storage-driver": "overlay2",
+    "live-restore": true,
+    "userns-remap": "default",
+    "userland-proxy": false,
+    "no-new-privileges": true,
+    "default-ulimits": {
+      "nofile": {
+        "Soft": 64000,
+        "Hard": 64000
+      },
+      "nproc": 65536
+    },
+    "default-address-pools": [
+      {
+        "base": "10.10.0.0/16",
+        "size": 24
+      }
+    ],
+    "registry-mirrors": ["https://your-mirror.example.com"],
+    "insecure-registries": ["my-insecure-registry.example.com:5000"]
+  }
+  

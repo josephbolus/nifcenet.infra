@@ -1,0 +1,5 @@
+---
+- include_tasks: determine_swarm_status.yml
+- include_tasks: initialize_swarm.yml
+- include_tasks: join_swarm.yml
+- include_tasks: verify_swarm.yml

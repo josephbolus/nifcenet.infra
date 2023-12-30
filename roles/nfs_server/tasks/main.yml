@@ -1,0 +1,47 @@
+---
+- name: Update all packages
+  dnf:
+    name: '*'
+    state: latest
+
+- name: Install nfs-utils
+  dnf:
+    name: nfs-utils
+    state: present
+
+- name: Enable and start NFS and RPC services
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  loop:
+    - nfs-server
+    - rpcbind
+
+- name: Ensure group anongid exists
+  group:
+    name: anongid
+    gid: "{{ anongid }}"
+    state: present
+
+- name: Ensure user anonuid exists
+  user:
+    name: anonuid
+    uid: "{{ anonuid }}"
+    group: "{{ anongid }}"
+    shell: /sbin/nologin
+    create_home: no
+
+- name: Configure NFS exports
+  template:
+    src: exports.j2
+    dest: /etc/exports
+  notify: Export NFS shares
+
+- name: Verify user anonuid
+  command: id anonuid
+  changed_when: false
+
+- name: Check NFS shares
+  command: showmount -e localhost
+  changed_when: false

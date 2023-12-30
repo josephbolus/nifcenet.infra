@@ -1,0 +1,8 @@
+---
+- name: Verify swarm nodes
+  shell: docker node ls
+  register: docker_swarm_output
+  when: "'manager' in group_names"
+
+- debug: var=docker_swarm_output.stdout_lines
+  when: "'manager' in group_names"

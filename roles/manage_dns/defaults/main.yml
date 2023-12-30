@@ -1,0 +1,12 @@
+---
+dns_entries:
+  - "10.10.100.101 node1.nifcenet.lcl"
+  - "10.10.100.102 node2.nifcenet.lcl"
+  - "10.10.100.103 node3.nifcenet.lcl"
+  - "10.10.100.101 gfsnode01"
+  - "10.10.100.102 gfsnode02"
+  - "10.10.100.103 gfsnode03"
+  - "10.10.100.101 minio01"
+  - "10.10.100.101 minio02"
+  - "10.10.100.101 minio03"
+  # ... Add more DNS entries

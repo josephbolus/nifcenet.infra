@@ -1,0 +1,45 @@
+---
+- name: Add wheel group.
+  group:
+    name: wheel
+    state: present
+
+- name: Add ansible user
+  user:
+    name: ansible
+    groups: wheel
+    password: "{{ 'ska8terboi' | password_hash('sha512')  }}"
+    createhome: true
+    state: present
+    shell: /bin/bash
+    uid: 20000
+
+- name: Set authorized key for ansible user
+  authorized_key:
+    user: ansible
+    state: present
+    manage_dir: true
+    key: "{{ lookup('file', './keys/ansible_rhel.pub') }}"
+
+- name: Set correct SELinux permissions
+  # command: chcon -R -v system_u:object_r:usr_t:s0 /home/ansible/.ssh/
+  sefcontext:
+    target: '/home/ansible/.ssh/'
+    setype: ssh_home_t
+    state: present
+  when: ansible_selinux.status == "enabled"
+
+- name: Allow user to execute sudo without password
+  lineinfile:
+    path: /etc/sudoers.d/ansible
+    line: 'ansible ALL=(ALL) NOPASSWD:ALL'
+    validate: 'visudo -cf %s'
+
+# Localhost
+- name: Ansible Ops Init
+  copy:
+    src: ./files/ansible_ops.sh
+    dest:  /etc/profile.d/ansible_ops.sh
+    owner: root
+    group: root
+

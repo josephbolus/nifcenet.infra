@@ -1,0 +1,31 @@
+---
+- name: Manage DNS entries
+  block:
+    - name: Add DNS entry
+      blockinfile:
+        path: /etc/hosts
+        block: "{{ lookup('template', 'dns.j2') }}"
+        backup: true
+      register: dns_entries_result
+
+    - name: Test DNS resolution (using ping)
+      command: "ping -c 1 {{ item.split()[1] }}"
+      no_log: true
+      register: ping_result
+      when: dns_entries_result.changed
+      with_items: "{{ dns_entries }}"
+
+    - name: Assert ping success for all entries
+      assert:
+        that: "'1 packets transmitted, 1 received' in item.stdout"
+        success_msg: "Ping to {{ item.item.split()[1] }} passed!"
+        fail_msg: "Ping to {{ item.item.split()[1] }} failed."
+        quiet: true
+      when: dns_entries_result.changed
+      loop: "{{ ping_result.results }}"
+
+  rescue:
+    - name: Notify of errors
+      debug:
+        msg: "There were errors during playbook execution. Please investigate."
+# Note: Replace 'debug' with 'mail' module if mail setup is configured
